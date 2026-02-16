@@ -7,10 +7,9 @@ import pandas as pd
 from datetime import datetime
 import uuid
 
-# 1️⃣ Crear la aplicación FastAPI
 app = FastAPI()
 
-# 2️⃣ Conectar frontend
+# Conectar frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -18,14 +17,14 @@ templates = Jinja2Templates(directory="templates")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# 3️⃣ Cargar Excel base
+# Cargar Excel base
 try:
     df = pd.read_excel("Inventario.xlsx")
     df.columns = df.columns.str.strip().str.lower()
 except FileNotFoundError:
     df = pd.DataFrame(columns=["codigo", "descripcion", "stock"])
 
-# 4️⃣ Lista temporal
+# Lista temporal
 lista_productos = []
 
 class Producto(BaseModel):
@@ -45,7 +44,6 @@ def estado_vencimiento(fecha_vencimiento: str) -> str:
         return f"Crítico (<7 días)"
     return f"Correcto ({dias} días restantes)"
 
-# 5️⃣ Endpoints
 @app.post("/agregar_producto")
 def agregar_producto(prod: Producto):
     if prod.codigo:
@@ -61,7 +59,6 @@ def agregar_producto(prod: Producto):
 
     datos = producto.to_dict(orient="records")[0]
 
-    # Evitar duplicados por código
     for p in lista_productos:
         if p["Codigo"] == datos.get("codigo", ""):
             raise HTTPException(status_code=400, detail="Producto ya agregado")
@@ -80,28 +77,17 @@ def agregar_producto(prod: Producto):
 def guardar_lista():
     if not lista_productos:
         raise HTTPException(status_code=400, detail="Lista vacía")
-
     df_final = pd.DataFrame(lista_productos)
     nombre_archivo = f"lista_{uuid.uuid4().hex}.xlsx"
     df_final.to_excel(nombre_archivo, index=False)
-
     return FileResponse(nombre_archivo, filename="lista_final.xlsx")
 
 @app.delete("/borrar_producto/{codigo}")
 def borrar_producto(codigo: str):
     global lista_productos
-    def codigo_ok(p):
-        try:
-            return str(p.get("Codigo", "")).strip().upper()
-        except Exception:
-            return ""
     codigo_norm = str(codigo).strip().upper()
-    lista_productos = [p for p in lista_productos if codigo_ok(p) != codigo_norm]
+    lista_productos = [p for p in lista_productos if str(p.get("Codigo", "")).strip().upper() != codigo_norm]
     return {"mensaje": "Producto eliminado", "lista": lista_productos}
-
-@app.get("/nombres")
-def obtener_nombres():
-    return {"nombres": df["descripcion"].dropna().unique().tolist()}
 
 @app.get("/api/articulos")
 def get_articulos():
@@ -118,17 +104,12 @@ def get_lista():
 def modificar_producto(codigo: str, nueva_fecha: str):
     codigo_norm = str(codigo).strip().upper()
     for p in lista_productos:
-        try:
-            p_codigo = str(p.get("Codigo", "")).strip().upper()
-        except Exception:
-            p_codigo = ""
-        if p_codigo == codigo_norm:
+        if str(p.get("Codigo", "")).strip().upper() == codigo_norm:
             p["FechaVencimiento"] = nueva_fecha
             p["Estado"] = estado_vencimiento(nueva_fecha)
             return {"mensaje": "Producto modificado", "lista": lista_productos}
     raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-# 6️⃣ Arranque del servidor
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
