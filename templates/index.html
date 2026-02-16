@@ -363,19 +363,6 @@ function renderArticulosTabla() {
         datalist.appendChild(option);
     });
 }
-
-function renderTablaProductos() {
-    const tabla = document.getElementById("tablaProductos");
-    if (!tabla) return;
-    tabla.innerHTML = "";
-    productosTabla.forEach((p, i) => {
-        const fila = document.createElement("tr");
-        fila.innerHTML = `
-            <td>${p}</td>
-            <td><button class="btn btn-sm btn-danger" onclick="borrarProductoTabla(${i})">Borrar</button></td>
-        `;
-        tabla.appendChild(fila);
-    });
 }
 
 function borrarProductoTabla(index) {
@@ -388,3 +375,4 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
+
