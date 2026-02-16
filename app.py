@@ -10,9 +10,9 @@ import uuid
 # 1️⃣ Crear la aplicación FastAPI
 app = FastAPI()
 
-# 2️⃣ Conectar frontend
+# 2️⃣ Conectar interfaz
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="plantillas")
 
 @app.get("/")
 async def home(request: Request):
@@ -23,7 +23,7 @@ try:
     df = pd.read_excel("Inventario.xlsx")
     df.columns = df.columns.str.strip().str.lower()
 except FileNotFoundError:
-    df = pd.DataFrame(columns=["codigo", "descripcion", "stock"])
+    df = pd.DataFrame(columns=["codigo", "descripción", "stock"])
 
 # 4️⃣ Lista temporal
 lista_productos = []
@@ -53,7 +53,7 @@ def agregar_producto(prod: Producto):
         if producto.empty:
             raise HTTPException(status_code=404, detail="Producto no encontrado por código")
     elif prod.descripcion:
-        producto = df[df["descripcion"].str.contains(prod.descripcion.strip(), case=False)]
+        producto = df[df["descripción"].str.contains(prod.descripcion.strip(), case=False)]
         if producto.empty:
             raise HTTPException(status_code=404, detail="Producto no encontrado por descripción")
     else:
@@ -61,14 +61,14 @@ def agregar_producto(prod: Producto):
 
     datos = producto.to_dict(orient="records")[0]
 
-    # Evitar duplicados por código
+    # Evitar duplicados
     for p in lista_productos:
         if p["Codigo"] == datos.get("codigo", ""):
             raise HTTPException(status_code=400, detail="Producto ya agregado")
 
     lista_productos.append({
         "Codigo": datos.get("codigo", ""),
-        "Descripcion": datos.get("descripcion", ""),
+        "Descripción": datos.get("descripción", ""),
         "Stock": datos.get("stock", ""),
         "FechaVencimiento": prod.fecha_vencimiento,
         "Estado": estado_vencimiento(prod.fecha_vencimiento)
@@ -90,39 +90,32 @@ def guardar_lista():
 @app.delete("/borrar_producto/{codigo}")
 def borrar_producto(codigo: str):
     global lista_productos
-    # Normalizar comparación para evitar problemas por mayúsculas/espacios/tipos
     def codigo_ok(p):
         try:
             return str(p.get("Codigo", "")).strip().upper()
         except Exception:
             return ""
-
     codigo_norm = str(codigo).strip().upper()
     lista_productos = [p for p in lista_productos if codigo_ok(p) != codigo_norm]
     return {"mensaje": "Producto eliminado", "lista": lista_productos}
 
 @app.get("/nombres")
 def obtener_nombres():
-    return {"nombres": df["descripcion"].dropna().unique().tolist()}
-
+    return {"nombres": df["descripción"].dropna().unique().tolist()}
 
 @app.get("/api/articulos")
 def get_articulos():
     try:
-        # Devolver los nombres desde el DataFrame si está disponible
-        return df["descripcion"].dropna().unique().tolist()
+        return df["descripción"].dropna().unique().tolist()
     except Exception:
-        # Fallback de ejemplo
         return ["Producto A", "Producto B", "Producto C"]
 
 @app.get("/lista")
 def get_lista():
     return {"lista": lista_productos}
 
-
 @app.put("/modificar_producto/{codigo}")
 def modificar_producto(codigo: str, nueva_fecha: str):
-    # Normalizar comparación (ignorar mayúsculas/espacios)
     codigo_norm = str(codigo).strip().upper()
     for p in lista_productos:
         try:
@@ -135,11 +128,22 @@ def modificar_producto(codigo: str, nueva_fecha: str):
             return {"mensaje": "Producto modificado", "lista": lista_productos}
     raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-# 6️⃣ Arranque del servidor
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+# 6️⃣ Rutas para archivos
+@app.get("/Inventario.xlsx")
+async def descargar_inventario():
+    try:
+        return FileResponse("Inventario.xlsx", filename="Inventario.xlsx")
+    except Exception:
+        raise HTTPException(status_code=404, detail="Inventario.xlsx no encontrado")
 
+@app.get("/logo.png.webp")
+async def descargar_logo():
+    try:
+        return FileResponse("logo.png.webp", filename="logo.png.webp")
+    except Exception:
+        raise HTTPException(status_code=404, detail="Logo no encontrado")
+
+# 7️⃣ Arranque del servidor
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
