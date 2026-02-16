@@ -45,21 +45,60 @@
 
 <!-- Botón amarillo de guardar Excel debajo -->
 <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+    <!-- Tarjeta de lista de productos -->
+    <div class="card p-4 shadow-lg border-0">
+        <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
+            📋 Lista de productos
+            <button class="btn btn-sm btn-outline-warning" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#listaCollapse" 
+                    aria-expanded="true" 
+                    aria-controls="listaCollapse">
+                Mostrar / Ocultar
+            </button>
+        </h4>
 
-<!-- Tarjeta de lista de productos -->
-<div class="card p-4 shadow-lg border-0">
-    <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
-        📋 Lista de productos
-        <!-- Botón para mostrar/ocultar -->
-        <button class="btn btn-sm btn-outline-warning" 
-                type="button" 
-                data-bs-toggle="collapse" 
-                data-bs-target="#listaCollapse" 
-                aria-expanded="true" 
-                aria-controls="listaCollapse">
-            Mostrar / Ocultar
-        </button>
-    </h4>
+        <div class="collapse show" id="listaCollapse">
+            <ul id="lista" class="list-group"></ul>
+        </div>
+    </div>
+
+    <!-- ✅ Aquí empieza tu JavaScript -->
+    <script>
+        function agregarProducto() {
+            const nombre = document.getElementById("nombre").value;
+            const codigo = document.getElementById("codigo").value;
+            const fecha = document.getElementById("fecha").value;
+
+            if (nombre && codigo && fecha) {
+                const lista = document.getElementById("lista");
+                const item = document.createElement("li");
+                item.className = "list-group-item";
+                item.textContent = `${nombre} - Código: ${codigo} - Vence: ${fecha}`;
+                lista.appendChild(item);
+
+                // limpiar campos
+                document.getElementById("nombre").value = "";
+                document.getElementById("codigo").value = "";
+                document.getElementById("fecha").value = "";
+
+                // volver el foco al campo código
+                document.getElementById("codigo").focus();
+            }
+        }
+
+        function guardarLista() {
+            // Aquí va tu lógica para exportar la lista a Excel
+            alert("Función de guardar Excel todavía pendiente de implementar");
+        }
+    </script>
+
+    <!-- ✅ Bootstrap JS necesario para que funcione el collapse -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
 
     <!-- Lista colapsable -->
     <div class="collapse show" id="listaCollapse">
@@ -67,10 +106,7 @@
     </div>
 </div>
 
-    <!-- Lista colapsable -->
-    <div class="collapse show" id="listaCollapse">
-        <ul id="lista" class="list-group"></ul>
-    </div>
+    
 </div>  
  
 </div>
@@ -421,6 +457,7 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
+
 
 
 
