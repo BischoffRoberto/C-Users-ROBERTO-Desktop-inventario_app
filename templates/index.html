@@ -51,9 +51,6 @@
     <div id="mensaje" class="alert d-none mt-3"></div>
 </div>
 
-<!-- Librería para Excel -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 <script>
 function mostrarMensaje(texto, tipo="info") {
     const msg = document.getElementById("mensaje");
@@ -62,101 +59,30 @@ function mostrarMensaje(texto, tipo="info") {
     msg.classList.remove("d-none");
 }
 
-// Toggle lista
 function toggleLista() {
     const lista = document.getElementById("lista");
     lista.classList.toggle("d-none");
 }
 
-// Flujo con Enter
-document.getElementById("codigo").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        document.getElementById("fecha").focus();
-    }
-});
-document.getElementById("fecha").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        agregarProducto();
-    }
-});
-
-// Agregar producto
-function agregarProducto() {
-    const cod = document.getElementById("codigo").value.trim();
-    const nom = document.getElementById("nombre").value.trim();
-    const fecha = document.getElementById("fecha").value.trim();
-
-    if (!cod && !nom) {
-        mostrarMensaje("Ingresa código o nombre", "warning");
-        return;
-    }
-    if (cod && nom) {
-        mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
-        return;
-    }
-    if (!fecha) {
-        mostrarMensaje("Ingresa fecha de vencimiento", "warning");
-        return;
-    }
-
-    const lista = document.getElementById("lista");
-    const li = document.createElement("li");
-    li.className = "list-group-item d-flex justify-content-between align-items-center";
-    li.textContent = `${cod || nom} - vence: ${fecha}`;
-    const btn = document.createElement("button");
-    btn.className = "btn btn-sm btn-danger ms-2";
-    btn.textContent = "Borrar";
-    btn.onclick = () => { lista.removeChild(li); };
-    li.appendChild(btn);
-    lista.appendChild(li);
-
-    mostrarMensaje("Producto agregado correctamente", "success");
-
-    // Reset y volver a código
-    document.getElementById("codigo").value = "";
-    document.getElementById("nombre").value = "";
-    document.getElementById("fecha").value = "";
-    document.getElementById("codigo").focus();
-}
-
-// Guardar Excel
-function guardarLista() {
-    const lista = document.getElementById("lista");
-    const items = lista.querySelectorAll("li");
-    if (items.length === 0) {
-        mostrarMensaje("No hay productos para guardar", "warning");
-        return;
-    }
-
-    const data = [["Código/Nombre", "Fecha de vencimiento"]];
-    items.forEach(li => {
-        const texto = li.firstChild.textContent;
-        const partes = texto.split(" - vence: ");
-        data.push([partes[0], partes[1]]);
+// Cargar artículos desde backend
+async function cargarArticulos() {
+    const resp = await fetch("/api/articulos");
+    const articulos = await resp.json();
+    const datalist = document.getElementById("articulos");
+    datalist.innerHTML = "";
+    articulos.forEach(a => {
+        const option = document.createElement("option");
+        option.value = `${a.codigo} - ${a.descripcion}`;
+        datalist.appendChild(option);
     });
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Productos");
-    XLSX.writeFile(wb, "productos.xlsx");
-
-    mostrarMensaje("Excel generado y descargado", "success");
 }
-</script>
+cargarArticulos();
 
-<!-- Input alternativo -->
-<div class="container mt-2">
-    <div class="mb-3">
-        <input type="text" id="articulo" list="articulos" class="form-control form-control-sm">
-    </div>
-</div>
-
-<!-- Tabla dinámica -->
-<div class="container mt-3">
-    <table id="tablaProductos" class="table table-sm"></table>
-</div>
-
-</body>
-</html>
+// Renderizar lista
+function renderLista(lista) {
+    const ul = document.getElementById("lista");
+    ul.innerHTML = "";
+    lista.forEach(p => {
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.textContent = `${p.Codigo} - ${p.Descripcion} - Stock: ${p.Stock} - Vence: ${p.FechaVencimiento} - Estado: ${p.Estado
