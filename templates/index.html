@@ -12,6 +12,7 @@
 <div class="container mt-4">
     <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
 
+    <!-- Formulario -->
     <div class="card p-4 mb-4 shadow-lg border-0">
         <h4 class="mb-3 text-success">➕ Agregar producto</h4>
         <div class="row g-3">
@@ -23,9 +24,7 @@
             <div class="col-12 col-md-4">
                 <label class="form-label">Nombre del artículo</label>
                 <input type="text" id="nombre" list="articulos" class="form-control form-control-sm" placeholder="Seleccione o escribe para filtrar">
-                <datalist id="articulos">
-                    <!-- opciones dinámicas -->
-                </datalist>
+                <datalist id="articulos"></datalist>
             </div>
             <div class="col-12 col-md-4">
                 <label class="form-label">Fecha de vencimiento</label>
@@ -35,14 +34,25 @@
         <button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
     </div>
 
+    <!-- Botón fijo de guardar Excel -->
+    <div class="mb-4">
+        <button class="btn btn-warning btn-sm w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+    </div>
+
+    <!-- Lista de productos con toggle -->
     <div class="card p-4 shadow-lg border-0">
-        <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
+        <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
+            📋 Lista de productos
+            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="toggleLista()">Mostrar/Ocultar</button>
+        </h4>
         <ul id="lista" class="list-group"></ul>
-        <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
     </div>
 
     <div id="mensaje" class="alert d-none mt-3"></div>
 </div>
+
+<!-- Librería para Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 function mostrarMensaje(texto, tipo="info") {
@@ -52,140 +62,104 @@ function mostrarMensaje(texto, tipo="info") {
     msg.classList.remove("d-none");
 }
 
-// Cargar todos los nombres desde /nombres (fallback)
-async function cargarNombres() {
-    try {
-        const response = await fetch("/nombres");
-        if (!response.ok) return;
-        const result = await response.json();
-        const datalist = document.getElementById("articulos");
-        datalist.innerHTML = '';
-        (result.nombres || result).forEach(nombre => {
-            let option = document.createElement("option");
-            option.value = nombre;
-            datalist.appendChild(option);
-        });
-    } catch (e) {
-        // ignore, fallback will handle
-    }
+// Toggle lista
+function toggleLista() {
+    const lista = document.getElementById("lista");
+    lista.classList.toggle("d-none");
 }
 
-async function cargarArticulos() {
-    const respuesta = await fetch("/api/articulos");
-    const articulos = await respuesta.json();
-
-    const datalist = document.getElementById("articulos");
-    datalist.innerHTML = ""; // limpiar antes de llenar
-
-    articulos.forEach(a => {
-        const option = document.createElement("option");
-        option.value = a;
-        datalist.appendChild(option);
-    });
-}
-
-// Llamar al inicio
-cargarArticulos();
-
-// Cargar lista actual si existe
-async function cargarListaInicial() {
-    try {
-        const resp = await fetch('/lista');
-        if (!resp.ok) return;
-        const data = await resp.json();
-        if (data.lista) renderLista(data.lista);
-    } catch (e) {}
-}
-cargarListaInicial();
-
-// Permitir Enter en código para saltar a fecha
+// Flujo con Enter
 document.getElementById("codigo").addEventListener("keypress", function(e) {
     if (e.key === "Enter") {
         e.preventDefault();
-        const cod = this.value.trim();
-        const nom = document.getElementById("nombre").value.trim();
-        if (cod && nom) {
-            mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
-            return;
-        }
-        if (!cod && !nom) {
-            mostrarMensaje("Ingresa código o nombre", "warning");
-            return;
-        }
         document.getElementById("fecha").focus();
     }
 });
-
-// Permitir Enter en nombre para saltar a fecha
-document.getElementById("nombre").addEventListener("keypress", function(e) {
+document.getElementById("fecha").addEventListener("keypress", function(e) {
     if (e.key === "Enter") {
         e.preventDefault();
-        const cod = document.getElementById("codigo").value.trim();
-        const nom = this.value.trim();
-        if (cod && nom) {
-            mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
-            return;
-        }
-        if (!cod && !nom) {
-            mostrarMensaje("Ingresa código o nombre", "warning");
-            return;
-        }
-        document.getElementById("fecha").focus();
+        agregarProducto();
     }
 });
+
+// Agregar producto
+function agregarProducto() {
+    const cod = document.getElementById("codigo").value.trim();
+    const nom = document.getElementById("nombre").value.trim();
+    const fecha = document.getElementById("fecha").value.trim();
+
+    if (!cod && !nom) {
+        mostrarMensaje("Ingresa código o nombre", "warning");
+        return;
+    }
+    if (cod && nom) {
+        mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
+        return;
+    }
+    if (!fecha) {
+        mostrarMensaje("Ingresa fecha de vencimiento", "warning");
+        return;
+    }
+
+    const lista = document.getElementById("lista");
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
+    li.textContent = `${cod || nom} - vence: ${fecha}`;
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm btn-danger";
+    btn.textContent = "Borrar";
+    btn.onclick = () => { lista.removeChild(li); };
+    li.appendChild(btn);
+    lista.appendChild(li);
+
+    mostrarMensaje("Producto agregado correctamente", "success");
+
+    // Reset y volver a código
+    document.getElementById("codigo").value = "";
+    document.getElementById("nombre").value = "";
+    document.getElementById("fecha").value = "";
+    document.getElementById("codigo").focus();
+}
+
+// Guardar Excel
+function guardarLista() {
+    const lista = document.getElementById("lista");
+    const items = lista.querySelectorAll("li");
+    if (items.length === 0) {
+        mostrarMensaje("No hay productos para guardar", "warning");
+        return;
+    }
+
+    // Crear datos para Excel
+    const data = [["Código/Nombre", "Fecha de vencimiento"]];
+    items.forEach(li => {
+        const texto = li.firstChild.textContent;
+        const partes = texto.split(" - vence: ");
+        data.push([partes[0], partes[1]]);
+    });
+
+    // Crear hoja y libro
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Productos");
+
+    // Descargar archivo
+    XLSX.writeFile(wb, "productos.xlsx");
+    mostrarMensaje("Excel generado y descargado", "success");
+}
 </script>
 
-<!-- Input alternativo y lista de ejemplo -->
+<!-- Input alternativo -->
 <div class="container mt-2">
     <div class="mb-3">
         <input type="text" id="articulo" list="articulos" class="form-control form-control-sm">
     </div>
 </div>
 
-<!-- Tabla dinámica de productos -->
+<!-- Tabla dinámica -->
 <div class="container mt-3">
     <table id="tablaProductos" class="table table-sm"></table>
 </div>
-
-<script>
-// Datos simulados para la tabla
-let productosTabla = [];
-
-function renderArticulosTabla() {
-    const datalist = document.getElementById("articulos");
-    if (!datalist) return;
-    datalist.innerHTML = "";
-    productosTabla.forEach(p => {
-        const option = document.createElement("option");
-        option.value = p;
-        datalist.appendChild(option);
-    });
-}
-
-function renderTablaProductos() {
-    const tabla = document.getElementById("tablaProductos");
-    if (!tabla) return;
-    tabla.innerHTML = "";
-    productosTabla.forEach((p, i) => {
-        const fila = document.createElement("tr");
-        fila.innerHTML = `
-            <td>${p}</td>
-            <td><button class="btn btn-sm btn-danger" onclick="borrarProductoTabla(${i})">Borrar</button></td>
-        `;
-        tabla.appendChild(fila);
-    });
-}
-
-function borrarProductoTabla(index) {
-    productosTabla.splice(index, 1); // borra del array
-    renderTablaProductos();          // refresca tabla
-    renderArticulosTabla();          // refresca desplegable
-}
-
-// Render inicial
-renderTablaProductos();
-renderArticulosTabla();
-</script>
 
 </body>
 </html>
