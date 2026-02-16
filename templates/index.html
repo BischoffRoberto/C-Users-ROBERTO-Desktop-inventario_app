@@ -4,64 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Archivo Vencimiento</title>
+  <link rel="icon" type="image/png" href="logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body {
-      background-color: #fdfdfd;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    h1 {
-      background-color: #073B4C;
-      color: #FFD166;
-      padding: 15px;
-      border-radius: 8px;
-    }
-    .card {
-      border-radius: 12px;
-    }
-    .btn-success {
-      background-color: #E63946;
-      border: none;
-    }
-    .btn-success:hover {
-      background-color: #d62828;
-    }
-    .btn-warning {
-      background-color: #FFD166;
-      color: #073B4C;
-      font-weight: bold;
-      border: none;
-    }
-    .btn-warning:hover {
-      background-color: #fcbf49;
-    }
-    .form-label {
-      font-weight: bold;
-      color: #073B4C;
-    }
-    .list-group-item {
-      font-size: 1rem;
-    }
+    body { background-color: #FFF9E6; font-family: 'Segoe UI', sans-serif; }
+    h1 { background-color: #E63946; color: #FFFFFF; padding: 15px; border-radius: 8px; }
+    .card { border-radius: 12px; }
+    .btn-success { background-color: #E63946; border: none; }
+    .btn-success:hover { background-color: #d62828; }
+    .btn-warning { background-color: #FFD166; color: #073B4C; font-weight: bold; border: none; }
+    .btn-warning:hover { background-color: #fcbf49; }
+    .form-label { font-weight: bold; color: #073B4C; }
+    .list-group-item { font-size: 1rem; }
   </style>
 </head>
 <body>
 <div class="container mt-4">
-  <h1 class="text-center mb-4 text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
+  <!-- Encabezado con logo -->
+  <h1 class="text-center mb-4 text-uppercase fw-bold d-flex align-items-center justify-content-center">
+    <img src="logo.png" alt="Logo" style="height:50px; margin-right:10px;">
+    ARCHIVO VENCIMIENTO
+  </h1>
 
   <!-- Formulario -->
   <div class="card p-4 mb-4 shadow-lg border-0">
     <h4 class="mb-3" style="color:#06D6A0;">➕ Agregar producto</h4>
+
+    <!-- Cargar Inventario -->
+    <div class="mb-3">
+      <label class="form-label">Cargar Inventario.xlsx</label>
+      <input type="file" id="archivoExcel" class="form-control" accept=".xlsx,.xls">
+    </div>
+
     <div class="row g-3">
       <div class="col-12 col-md-4">
         <label class="form-label">Nombre del artículo</label>
         <input type="text" id="nombre" list="articulos" class="form-control form-control-lg"
                placeholder="Seleccione o escriba para filtrar">
-        <datalist id="articulos">
-          <option value="Pollo Fresco GTA x Kg">
-          <option value="Leche Entera 1L">
-          <option value="Arroz 1Kg">
-        </datalist>
+        <datalist id="articulos"></datalist>
       </div>
 
       <div class="col-12 col-md-4">
@@ -161,7 +142,33 @@ function guardarLista() {
   XLSX.utils.book_append_sheet(wb, ws, "Productos");
   XLSX.writeFile(wb, "productos.xlsx");
 }
+
+// Leer Inventario.xlsx y llenar datalist
+document.getElementById("archivoExcel").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const primeraHoja = workbook.SheetNames[0];
+    const hoja = workbook.Sheets[primeraHoja];
+    const datos = XLSX.utils.sheet_to_json(hoja, {header:1});
+
+    const datalist = document.getElementById("articulos");
+    datalist.innerHTML = "";
+    datos.forEach(fila => {
+      if (fila[0]) {
+        const option = document.createElement("option");
+        option.value = fila[0];
+        datalist.appendChild(option);
+      }
+    });
+    alert("Inventario cargado correctamente.");
+  };
+  reader.readAsArrayBuffer(file);
+});
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
