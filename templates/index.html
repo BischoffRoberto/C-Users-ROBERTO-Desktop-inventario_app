@@ -2,518 +2,389 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario de Vencimientos</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        main {
-            padding: 30px;
-        }
-
-        section {
-            margin-bottom: 30px;
-        }
-
-        h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 1em;
-            font-family: inherit;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-delete {
-            width: auto;
-            padding: 8px 16px;
-            background: #dc2626;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-
-        .filters {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .filter-btn {
-            width: auto;
-            padding: 10px 20px;
-            border: 2px solid #ddd;
-            background: white;
-            color: #333;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .filter-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .product-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .product-card {
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .product-card.expired {
-            border-left: 5px solid #dc2626;
-            background: #fef2f2;
-        }
-
-        .product-card.expiring {
-            border-left: 5px solid #f59e0b;
-            background: #fffbeb;
-        }
-
-        .product-card.valid {
-            border-left: 5px solid #10b981;
-            background: #f0fdf4;
-        }
-
-        .product-name {
-            font-size: 1.2em;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        .badge.expired {
-            background: #dc2626;
-            color: white;
-        }
-
-        .badge.expiring {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .badge.valid {
-            background: #10b981;
-            color: white;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: #666;
-        }
-
-        .info-value {
-            color: #333;
-        }
-
-        .empty-message {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 1.1em;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #e0e7ff, #f0f9ff);
-            padding: 25px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 5px solid #667eea;
-        }
-
-        .stat-card.expired {
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            border-left-color: #dc2626;
-        }
-
-        .stat-card.expiring {
-            background: linear-gradient(135deg, #fef3c7, #fed7aa);
-            border-left-color: #f59e0b;
-        }
-
-        .stat-card.valid {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            border-left-color: #10b981;
-        }
-
-        .stat-card h3 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        .stat-card p {
-            color: #666;
-            font-weight: 600;
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8em;
-            }
-
-            .product-list {
-                grid-template-columns: 1fr;
-            }
-
-            .filters {
-                flex-direction: column;
-            }
-
-            .filter-btn {
-                width: 100%;
-            }
-
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+    <title>ARCHIVO VENCIMIENTO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>📦 Inventario de Vencimientos</h1>
-            <p>Control de productos y fechas de vencimiento</p>
-        </header>
+<body class="bg-light">
 
-        <main>
-            <!-- Formulario -->
-            <section>
-                <h2>Agregar Producto</h2>
-                <form id="productForm">
-                    <div class="form-group">
-                        <label for="productName">Nombre del producto:</label>
-                        <input type="text" id="productName" placeholder="Ej: Leche, Pan, Yogurt" required>
-                    </div>
+<div class="container mt-4">
+    <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
 
-                    <div class="form-group">
-                        <label for="expiryDate">Fecha de vencimiento:</label>
-                        <input type="date" id="expiryDate" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="quantity">Cantidad:</label>
-                        <input type="number" id="quantity" min="1" value="1" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="category">Categoría:</label>
-                        <select id="category">
-                            <option value="Lácteos">Lácteos</option>
-                            <option value="Pan">Pan</option>
-                            <option value="Conservas">Conservas</option>
-                            <option value="Bebidas">Bebidas</option>
-                            <option value="Otros">Otros</option>
-                        </select>
-                    </div>
-
-                    <button type="submit">+ Agregar Producto</button>
-                </form>
-            </section>
-
-            <!-- Filtros -->
-            <section>
-                <h2>Filtros</h2>
-                <div class="filters">
-                    <button class="filter-btn active" data-filter="all">Todos</button>
-                    <button class="filter-btn" data-filter="expired">Vencidos</button>
-                    <button class="filter-btn" data-filter="expiring">Próximos a vencer</button>
-                    <button class="filter-btn" data-filter="valid">Vigentes</button>
-                </div>
-            </section>
-
-            <!-- Lista de productos -->
-            <section>
-                <h2>Productos</h2>
-                <div id="productList" class="product-list">
-                    <p class="empty-message">No hay productos. ¡Agrega uno para empezar!</p>
-                </div>
-            </section>
-
-            <!-- Estadísticas -->
-            <section>
-                <h2>Estadísticas</h2>
-                <div class="stats">
-                    <div class="stat-card">
-                        <h3 id="totalProducts">0</h3>
-                        <p>Total de productos</p>
-                    </div>
-                    <div class="stat-card expired">
-                        <h3 id="expiredCount">0</h3>
-                        <p>Vencidos</p>
-                    </div>
-                    <div class="stat-card expiring">
-                        <h3 id="expiringCount">0</h3>
-                        <p>Próximos a vencer</p>
-                    </div>
-                    <div class="stat-card valid">
-                        <h3 id="validCount">0</h3>
-                        <p>Vigentes</p>
-                    </div>
-                </div>
-            </section>
-        </main>
+    <div class="card p-4 mb-4 shadow-lg border-0">
+        <h4 class="mb-3 text-success">➕ Agregar producto</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Código</label>
+                <input type="text" id="codigo" class="form-control form-control-sm" placeholder="Ej: A123">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Nombre del artículo</label>
+                <input type="text" id="nombre" list="articulos" class="form-control form-control-sm" placeholder="Seleccione o escribe para filtrar">
+                <datalist id="articulos">
+                    <!-- opciones dinámicas -->
+                </datalist>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha de vencimiento</label>
+                <input type="date" id="fecha" class="form-control form-control-sm">
+            </div>
+        </div>
+        <button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
     </div>
 
-    <script>
-        let products = [];
-        let currentFilter = 'all';
+    <div class="card p-4 shadow-lg border-0">
+        <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
+        <ul id="lista" class="list-group"></ul>
+        <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProducts();
-            setupEventListeners();
-            updateStats();
+    <div id="mensaje" class="alert d-none mt-3"></div>
+</div>
+
+<script>
+function mostrarMensaje(texto, tipo="info") {
+    const msg = document.getElementById("mensaje");
+    msg.className = `alert alert-${tipo}`;
+    msg.textContent = texto;
+    msg.classList.remove("d-none");
+}
+
+// Cargar todos los nombres desde /nombres (fallback)
+async function cargarNombres() {
+    try {
+        const response = await fetch("/nombres");
+        if (!response.ok) return;
+        const result = await response.json();
+        const datalist = document.getElementById("articulos");
+        datalist.innerHTML = '';
+        (result.nombres || result).forEach(nombre => {
+            let option = document.createElement("option");
+            option.value = nombre;
+            datalist.appendChild(option);
         });
+    } catch (e) {
+        // ignore, fallback will handle
+    }
+}
 
-        function setupEventListeners() {
-            document.getElementById('productForm').addEventListener('submit', addProduct);
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    currentFilter = e.target.dataset.filter;
-                    renderProducts();
-                });
-            });
+async function cargarArticulos() {
+    const respuesta = await fetch("/api/articulos");
+    const articulos = await respuesta.json();
+
+    const datalist = document.getElementById("articulos");
+    datalist.innerHTML = ""; // limpiar antes de llenar
+
+    articulos.forEach(a => {
+        const option = document.createElement("option");
+        option.value = a;
+        datalist.appendChild(option);
+    });
+}
+
+// Llamar al inicio
+cargarArticulos();
+// Cargar lista actual si existe
+async function cargarListaInicial() {
+    try {
+        const resp = await fetch('/lista');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data.lista) renderLista(data.lista);
+    } catch (e) {}
+}
+cargarListaInicial();
+
+// Permitir Enter en código para saltar a fecha
+document.getElementById("codigo").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        const cod = this.value.trim();
+        const nom = document.getElementById("nombre").value.trim();
+        if (cod && nom) {
+            mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
+            return;
+        }
+        if (!cod && !nom) {
+            mostrarMensaje("Ingresa código o nombre", "warning");
+            return;
+        }
+        document.getElementById("fecha").focus();
+    }
+});
+
+// Permitir Enter en nombre para saltar a fecha
+document.getElementById("nombre").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        const cod = document.getElementById("codigo").value.trim();
+        const nom = this.value.trim();
+        if (cod && nom) {
+            mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
+            return;
+        }
+        if (!cod && !nom) {
+            mostrarMensaje("Ingresa código o nombre", "warning");
+            return;
+        }
+        document.getElementById("fecha").focus();
+    }
+});
+
+// Permitir Enter en fecha para agregar producto
+document.getElementById("fecha").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        agregarProducto();
+    }
+});
+
+async function agregarProducto() {
+    const data = {
+        codigo: document.getElementById("codigo").value,
+        descripcion: document.getElementById("nombre").value,
+        fecha_vencimiento: document.getElementById("fecha").value
+    };
+    if (data.codigo && data.descripcion) {
+        mostrarMensaje("Ingresa SOLO código O nombre, no ambos", "warning");
+        return;
+    }
+    if (!data.codigo && !data.descripcion) {
+        mostrarMensaje("Ingresa código o nombre", "warning");
+        return;
+    }
+    if (!data.fecha_vencimiento) {
+        mostrarMensaje("Ingresa fecha de vencimiento", "warning");
+        return;
+    }
+    const response = await fetch("/agregar_producto", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (result.lista) {
+        renderLista(result.lista);
+        mostrarMensaje("✅ Producto agregado correctamente", "success");
+        document.getElementById("codigo").value = "";
+        document.getElementById("nombre").value = "";
+        document.getElementById("fecha").value = "";
+        document.getElementById("codigo").focus();
+    } else {
+        mostrarMensaje(result.detail || "Error al agregar producto", "danger");
+    }
+}
+
+async function guardarLista() {
+    // Validar que la lista en pantalla tenga elementos
+    const cont = document.getElementById('lista');
+    if (!cont || cont.children.length === 0) {
+        mostrarMensaje('La lista está vacía. Agrega productos antes de guardar.', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch("/guardar_lista", { method: "POST" });
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "lista_final.xlsx";
+            a.click();
+            mostrarMensaje("📂 Lista guardada y descargada", "success");
+            return;
         }
 
-        function addProduct(e) {
-            e.preventDefault();
-
-            const product = {
-                name: document.getElementById('productName').value,
-                expiryDate: document.getElementById('expiryDate').value,
-                quantity: parseInt(document.getElementById('quantity').value),
-                category: document.getElementById('category').value
-            };
-
-            fetch('/api/products', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(product)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('productForm').reset();
-                loadProducts();
-                updateStats();
-            });
+        // Intentar leer mensaje de error del servidor
+        let detail = '';
+        try {
+            const json = await response.json();
+            detail = json.detail || json.mensaje || JSON.stringify(json);
+        } catch (e) {
+            detail = await response.text();
         }
+        mostrarMensaje(`Error al guardar la lista (${response.status}): ${detail}`, 'danger');
+    } catch (e) {
+        mostrarMensaje('Error de conexión al guardar la lista', 'danger');
+    }
+}
 
-        function deleteProduct(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-                fetch(`/api/products/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(() => {
-                    loadProducts();
-                    updateStats();
-                });
+async function borrarProducto(codigo) {
+    try {
+        const response = await fetch(`/borrar_producto/${encodeURIComponent(codigo)}`, { method: "DELETE" });
+        if (!response.ok) {
+            let err = {};
+            try { err = await response.json(); } catch(e) {}
+            mostrarMensaje(err.detail || err.mensaje || "Error al eliminar producto", "danger");
+            return;
+        }
+        const result = await response.json();
+        renderLista(result.lista || []);
+        mostrarMensaje(result.mensaje || "🗑️ Producto eliminado", "warning");
+    } catch (e) {
+        mostrarMensaje("Error al eliminar producto", "danger");
+    }
+}
+
+// Nota: eliminar función de borrado por nombre para evitar conflictos
+
+function renderLista(lista) {
+    const contenedor = document.getElementById("lista");
+    contenedor.innerHTML = "";
+    if (!Array.isArray(lista)) return;
+        lista.forEach(p => {
+            let li = document.createElement("li");
+            li.className = "list-group-item small d-flex justify-content-between align-items-center";
+            li.dataset.codigo = String(p.Codigo || '');
+            li.innerHTML = `
+                <div>
+                    <strong>Código:</strong> ${p.Codigo} | <strong>Fecha:</strong> <span class="fecha">${p.FechaVencimiento}</span><br>
+                    <strong>Descripción:</strong> ${p.Descripcion}<br>
+                    <strong>Estado:</strong> ${p.Estado}
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm me-2 btn-modificar" onclick="startEdit('${p.Codigo}')">Modificar</button>
+                    <button class="btn btn-success btn-sm me-2 btn-guardar d-none" onclick="saveEdit('${p.Codigo}')">Guardar</button>
+                    <button class="btn btn-outline-secondary btn-sm me-2 btn-cancel d-none" onclick="cancelEdit('${p.Codigo}')">Cancelar</button>
+                    <button class="btn btn-danger btn-sm btn-borrar" onclick="borrarProducto('${p.Codigo}')">Borrar</button>
+                </div>
+            `;
+            contenedor.appendChild(li);
+        });
+}
+
+// (La edición ahora usa startEdit/saveEdit/cancelEdit)
+
+// Iniciar edición en línea de la fecha: mostrar input[type=date]
+function startEdit(codigo) {
+    const li = document.querySelector(`li[data-codigo="${codigo}"]`);
+    if (!li) return;
+    const spanFecha = li.querySelector('.fecha');
+    const current = spanFecha ? spanFecha.textContent.trim() : '';
+    // Crear input date
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.className = 'form-control form-control-sm d-inline-block';
+    input.style.width = 'auto';
+    // Si current tiene formato YYYY-MM-DD, usarlo
+    input.value = current || '';
+    spanFecha.replaceWith(input);
+    // Mostrar botones guardar/cancelar
+    li.querySelectorAll('.btn-modificar').forEach(b=>b.classList.add('d-none'));
+    li.querySelectorAll('.btn-borrar').forEach(b=>b.classList.add('d-none'));
+    li.querySelectorAll('.btn-guardar').forEach(b=>b.classList.remove('d-none'));
+    li.querySelectorAll('.btn-cancel').forEach(b=>b.classList.remove('d-none'));
+}
+
+// Cancelar edición: restaurar span.fecha con el valor original (pedir al backend lista actual)
+function cancelEdit(codigo) {
+    cargarListaInicial(); // recargar la lista para restaurar el contenido original
+}
+
+// Guardar edición: enviar nueva fecha y refrescar lista
+async function saveEdit(codigo) {
+    const li = document.querySelector(`li[data-codigo="${codigo}"]`);
+    if (!li) return;
+    const input = li.querySelector('input[type="date"]');
+    if (!input) return;
+    const nuevaFecha = input.value;
+    if (!nuevaFecha) return mostrarMensaje('Ingrese una fecha válida', 'warning');
+    try {
+        const url = `/modificar_producto/${encodeURIComponent(codigo)}?nueva_fecha=${encodeURIComponent(nuevaFecha)}`;
+        const resp = await fetch(url, { method: 'PUT' });
+        if (!resp.ok) {
+            let err = {};
+            try { err = await resp.json(); } catch(e) {}
+            mostrarMensaje(err.detail || err.mensaje || 'Error al modificar producto', 'danger');
+            return;
+        }
+        const data = await resp.json();
+        // Intentar actualizar sólo la fila en el DOM usando la lista devuelta
+        const updated = (data.lista || []).find(item => String(item.Codigo) === String(codigo));
+        if (updated) {
+            // actualizar contenido de la columna izquierda
+            const leftDiv = li.querySelector('div');
+            if (leftDiv) {
+                leftDiv.innerHTML = `
+                                <strong>Código:</strong> ${updated.Codigo} | <strong>Fecha:</strong> <span class="fecha">${updated.FechaVencimiento}</span><br>
+                                <strong>Descripción:</strong> ${updated.Descripcion}<br>
+                                <strong>Estado:</strong> ${updated.Estado}
+                        `;
             }
+            // alternar botones: ocultar guardar/cancelar y mostrar modificar/borrar
+            li.querySelectorAll('.btn-guardar').forEach(b=>b.classList.add('d-none'));
+            li.querySelectorAll('.btn-cancel').forEach(b=>b.classList.add('d-none'));
+            li.querySelectorAll('.btn-modificar').forEach(b=>b.classList.remove('d-none'));
+            li.querySelectorAll('.btn-borrar').forEach(b=>b.classList.remove('d-none'));
+            mostrarMensaje(data.mensaje || 'Producto modificado', 'success');
+        } else {
+            // fallback: recargar lista completa
+            renderLista(data.lista || []);
+            mostrarMensaje(data.mensaje || 'Producto modificado', 'success');
         }
+    } catch (e) {
+        mostrarMensaje('Error al modificar producto', 'danger');
+    }
+}
+</script>
 
-        function getProductStatus(expiryDate) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const expiry = new Date(expiryDate);
-            expiry.setHours(0, 0, 0, 0);
-            
-            const daysRemaining = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-            
-            if (daysRemaining < 0) {
-                return { status: 'expired', label: 'Vencido', daysText: 'Vencido' };
-            } else if (daysRemaining <= 7) {
-                return { status: 'expiring', label: 'Próximo a vencer', daysText: `${daysRemaining} días` };
-            } else {
-                return { status: 'valid', label: 'Vigente', daysText: `${daysRemaining} días` };
-            }
-        }
+<!-- Input alternativo y lista de ejemplo (usa el mismo datalist `articulos`) -->
+<div class="container mt-2">
+    <div class="mb-3">
+        <input type="text" id="articulo" list="articulos" class="form-control form-control-sm">
+    </div>
 
-        function renderProducts() {
-            const productList = document.getElementById('productList');
-            
-            let filteredProducts = products;
-            
-            if (currentFilter === 'expired') {
-                filteredProducts = products.filter(p => getProductStatus(p.expiryDate).status === 'expired');
-            } else if (currentFilter === 'expiring') {
-                filteredProducts = products.filter(p => getProductStatus(p.expiryDate).status === 'expiring');
-            } else if (currentFilter === 'valid') {
-                filteredProducts = products.filter(p => getProductStatus(p.expiryDate).status === 'valid');
-            }
+    <!-- lista de ejemplo eliminada (sin valores predeterminados) -->
+</div>
 
-            filteredProducts.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+<!-- Sin función local de borrado ni valores predeterminados -->
 
-            if (filteredProducts.length === 0) {
-                productList.innerHTML = '<p class="empty-message">No hay productos. ¡Agrega uno para empezar!</p>';
-                return;
-            }
-
-            productList.innerHTML = filteredProducts.map(product => {
-                const status = getProductStatus(product.expiryDate);
-                const expiryDateFormatted = new Date(product.expiryDate).toLocaleDateString('es-ES', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                return `
-                    <div class="product-card ${status.status}">
-                        <div class="product-name">${product.name}</div>
-                        <span class="badge ${status.status}">${status.label}</span>
-
-                        <div class="product-info">
-                            <div class="info-row">
-                                <span class="info-label">📅 Vencimiento:</span>
-                                <span class="info-value">${expiryDateFormatted}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">⏱️ Tiempo restante:</span>
-                                <span class="info-value">${status.daysText}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">📦 Cantidad:</span>
-                                <span class="info-value">${product.quantity} unidad${product.quantity !== 1 ? 'es' : ''}</span>
-                            </div>
-                        </div>
-
-                        <button class="btn-delete" onclick="deleteProduct(${product.id})">🗑️ Eliminar</button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function updateStats() {
-            fetch('/api/stats')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalProducts').textContent = data.total;
-                    document.getElementById('expiredCount').textContent = data.expired;
-                    document.getElementById('expiringCount').textContent = data.expiring;
-                    document.getElementById('validCount').textContent = data.valid;
-                });
-        }
-
-        function loadProducts() {
-            fetch('/api/products')
-                .then(response => response.json())
-                .then(data => {
-                    products = data;
-                    renderProducts();
-                });
-        }
-    </script>
 </body>
 </html>
+
+<!-- Tabla dinámica de productos y sincronización con datalist -->
+<div class="container mt-3">
+  
+    <table id="tablaProductos" class="table table-sm"></table>
+</div>
+
+<script>
+// Datos simulados para la tabla
+let productosTabla = [];
+
+function renderArticulosTabla() {
+    const datalist = document.getElementById("articulos");
+    if (!datalist) return;
+    datalist.innerHTML = "";
+    productosTabla.forEach(p => {
+        const option = document.createElement("option");
+        option.value = p;
+        datalist.appendChild(option);
+    });
+}
+
+function renderTablaProductos() {
+    const tabla = document.getElementById("tablaProductos");
+    if (!tabla) return;
+    tabla.innerHTML = "";
+    productosTabla.forEach((p, i) => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td>${p}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="borrarProductoTabla(${i})">Borrar</button></td>
+        `;
+        tabla.appendChild(fila);
+    });
+}
+
+function borrarProductoTabla(index) {
+    productosTabla.splice(index, 1); // borra del array
+    renderTablaProductos();              // refresca tabla
+    renderArticulosTabla();          // refresca desplegable
+}
+
+// Render inicial
+renderTablaProductos();
+renderArticulosTabla();
+</script>
