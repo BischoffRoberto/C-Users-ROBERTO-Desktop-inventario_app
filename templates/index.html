@@ -69,13 +69,13 @@ function toggleLista() {
 }
 
 // Flujo con Enter
-document.getElementById("codigo").addEventListener("keypress", function(e) {
+document.getElementById("codigo").addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
         e.preventDefault();
         document.getElementById("fecha").focus();
     }
 });
-document.getElementById("fecha").addEventListener("keypress", function(e) {
+document.getElementById("fecha").addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
         e.preventDefault();
         agregarProducto();
@@ -106,7 +106,7 @@ function agregarProducto() {
     li.className = "list-group-item d-flex justify-content-between align-items-center";
     li.textContent = `${cod || nom} - vence: ${fecha}`;
     const btn = document.createElement("button");
-    btn.className = "btn btn-sm btn-danger";
+    btn.className = "btn btn-sm btn-danger ms-2";
     btn.textContent = "Borrar";
     btn.onclick = () => { lista.removeChild(li); };
     li.appendChild(btn);
@@ -130,7 +130,6 @@ function guardarLista() {
         return;
     }
 
-    // Crear datos para Excel
     const data = [["Código/Nombre", "Fecha de vencimiento"]];
     items.forEach(li => {
         const texto = li.firstChild.textContent;
@@ -138,13 +137,11 @@ function guardarLista() {
         data.push([partes[0], partes[1]]);
     });
 
-    // Crear hoja y libro
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Productos");
-
-    // Descargar archivo
     XLSX.writeFile(wb, "productos.xlsx");
+
     mostrarMensaje("Excel generado y descargado", "success");
 }
 </script>
