@@ -5,8 +5,20 @@
     <title>ARCHIVO VENCIMIENTO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+      <meta charset="UTF-8">
+  <title>Mi Inventario</title>
+
+  <!-- Favicon: logo pequeño en la pestaña del navegador -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+</head>
+
+  
+ 
 </head>
 <body class="bg-light">
+    <!-- Encabezado con logo grande -->
+  <header style="padding: 10px; text-align: center;">
+    <img src="{{ url_for('static', filename='images.png') }}" alt="Logo grande" style="height:80px;">
 
 <div class="container mt-4">
     <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
@@ -388,6 +400,7 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
+
 
 
 
