@@ -33,7 +33,6 @@
                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
     </div>
 
-    <!-- Fecha de vencimiento -->
    <!-- Fecha de vencimiento -->
 <div class="col-12">
     <label class="form-label">Fecha de vencimiento</label>
@@ -42,8 +41,7 @@
 </div>
 </div>
 <button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
-    
-    <div class="card p-4 shadow-lg border-0">
+  <div class="card p-4 shadow-lg border-0">
     <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
         📋 Lista de productos
         <!-- Botón para mostrar/ocultar -->
@@ -60,11 +58,9 @@
     <!-- Lista colapsable -->
     <div class="collapse show" id="listaCollapse">
         <ul id="lista" class="list-group"></ul>
-        <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
     </div>
-</div>
-   
-
+</div>  
+ 
 </div>
 
 <script>
@@ -413,6 +409,7 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
+
 
 
 
