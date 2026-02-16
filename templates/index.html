@@ -15,9 +15,12 @@
         <h4 class="mb-3 text-success">➕ Agregar producto</h4>
         <div class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">Código</label>
-                <input type="text" id="codigo" class="form-control form-control-sm" placeholder="Ej: A123">
-            </div>
+    <label class="form-label">Código</label>
+    <input type="text" id="codigo" class="form-control form-control-sm" 
+           placeholder="Ej: 123" 
+           pattern="[0-9]+" 
+           title="Solo números" />
+    </div>
             <div class="col-md-4">
                 <label class="form-label">Nombre del artículo</label>
                 <input type="text" id="nombre" list="articulos" class="form-control form-control-sm" placeholder="Seleccione o escribe para filtrar">
@@ -388,6 +391,7 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
+
 
 
 
