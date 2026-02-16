@@ -20,7 +20,8 @@ async def home(request: Request):
 
 # 3️⃣ Cargar Excel base
 try:
-    df = pd.read_excel("estatica/inventario.xlsx")    
+  import os
+df = pd.read_excel(os.path.join("static", "inventario.xlsx"))   
     df.columns = df.columns.str.strip().str.lower()
 except FileNotFoundError:
     df = pd.DataFrame(columns=["codigo", "descripcion", "stock"])
@@ -139,5 +140,6 @@ def modificar_producto(codigo: str, nueva_fecha: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+
 
 
