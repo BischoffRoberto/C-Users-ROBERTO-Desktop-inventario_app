@@ -16,7 +16,7 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <label class="form-label">Código</label>
-                <input type="text" id="codigo" class="form-control form-control-sm" placeholder="Ej: A123">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Código del producto">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Nombre del artículo</label>
@@ -387,4 +387,5 @@ function borrarProductoTabla(index) {
 // Render inicial
 renderTablaProductos();
 renderArticulosTabla();
+
 </script>
