@@ -13,30 +13,45 @@
 
 <div class="container mt-4">
     <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
-<div class="row g-3">
-    <!-- ✅ Descripción primero -->
-    <div class="col-12 col-md-4">
-        <label class="form-label">Nombre del artículo</label>
-        <input type="text" id="nombre" list="articulos" 
-               class="form-control form-control-sm" 
-               placeholder="Seleccione o escribe para filtrar">
-        <datalist id="articulos"></datalist>
+<!-- Tarjeta de agregar producto -->
+<div class="card p-4 mb-4 shadow-lg border-0">
+    <h4 class="mb-3 text-success">➕ Agregar producto</h4>
+    <div class="row g-3">
+        <!-- Nombre -->
+        <div class="col-12 col-md-4">
+            <label class="form-label">Nombre del artículo</label>
+            <input type="text" id="nombre" list="articulos" 
+                   class="form-control form-control-sm" 
+                   placeholder="Seleccione o escribe para filtrar">
+            <datalist id="articulos"></datalist>
+        </div>
+
+        <!-- Código -->
+        <div class="col-12 col-md-4">
+            <label class="form-label">Código</label>
+            <input type="text" id="codigo" 
+                   class="form-control form-control-sm" 
+                   placeholder="Código del producto"
+                   inputmode="numeric" pattern="[0-9]*"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+
+        <!-- Fecha -->
+        <div class="col-12 col-md-4">
+            <label class="form-label">Fecha de vencimiento</label>
+            <input type="date" id="fecha" class="form-control form-control-sm"
+                   onkeydown="if(event.key==='Enter'){agregarProducto();}">
+        </div>
     </div>
 
-    <!-- ✅ Código segundo, solo números sin flechas -->
-    <div class="col-12 col-md-4">
-        <label class="form-label">Código</label>
-        <input type="text" id="codigo" 
-               class="form-control form-control-sm" 
-               placeholder="Código del producto"
-               inputmode="numeric" pattern="[0-9]*"
-               oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-        <!-- Fecha de vencimiento -->
-<div class="col-12">
-    <label class="form-label">Fecha de vencimiento</label>
-    <input type="date" id="fecha" class="form-control form-control-lg"
-           onkeydown="if(event.key==='Enter'){agregarProducto();}">
-    <!-- Tarjeta de lista -->
+    <!-- Botón verde -->
+    <button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
+
+    <!-- Botón amarillo -->
+    <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+</div>
+
+<!-- Tarjeta de lista -->
 <div class="card p-4 shadow-lg border-0">
     <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
         📋 Lista de productos
@@ -54,36 +69,9 @@
         <ul id="lista" class="list-group"></ul>
     </div>
 </div>
-</div>
-</div>
 
-<!-- Botón verde -->
-<button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
-
-<!-- Botón amarillo -->
-<button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
-
-    <!-- Tarjeta de lista de productos -->
-    <div class="card p-4 shadow-lg border-0">
-        <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
-            📋 Lista de productos
-            <button class="btn btn-sm btn-outline-warning" 
-                    type="button" 
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#listaCollapse" 
-                    aria-expanded="true" 
-                    aria-controls="listaCollapse">
-                Mostrar / Ocultar
-            </button>
-        </h4>
-
-        <div class="collapse show" id="listaCollapse">
-            <ul id="lista" class="list-group"></ul>
-        </div>
-    </div>
-
-    <!-- ✅ Aquí empieza tu JavaScript -->
-    <script>
+<!-- Script -->
+<script>
     function agregarProducto() {
         const nombre = document.getElementById("nombre").value;
         const codigo = document.getElementById("codigo").value;
@@ -111,8 +99,8 @@
     }
 </script>
 
-    <!-- ✅ Bootstrap JS necesario para que funcione el collapse -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS necesario para collapse -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
    
 </body>
 </html>
@@ -458,6 +446,7 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
+
 
 
 
