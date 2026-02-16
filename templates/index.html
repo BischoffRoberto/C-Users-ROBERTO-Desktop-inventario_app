@@ -1,122 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archivo Vencimiento</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Librería SheetJS para exportar Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
 <div class="container mt-4">
-    <!-- Título -->
-    <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
+  <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
 
-    <!-- Formulario -->
-    <div class="card p-4 mb-4 shadow-lg border-0">
-        <h4 class="mb-3 text-success">➕ Agregar producto</h4>
-        <div class="row g-3">
-            <!-- Nombre -->
-            <div class="col-12 col-md-4">
-                <label class="form-label">Nombre del artículo</label>
-                <input type="text" id="nombre" list="articulos" 
-                       class="form-control form-control-lg" 
-                       placeholder="Seleccione o escribe para filtrar">
-                <datalist id="articulos">
-                    <option value="Pollo Fresco GTA x Kg">
-                    <option value="Leche Entera 1L">
-                    <option value="Arroz 1Kg">
-                </datalist>
-            </div>
+  <!-- Formulario -->
+  <div class="card p-4 mb-4 shadow-lg border-0">
+    <h4 class="mb-3 text-success">➕ Agregar producto</h4>
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label">Nombre del artículo</label>
+        <input type="text" id="nombre" list="articulos" class="form-control form-control-lg"
+               placeholder="Seleccione o escriba para filtrar">
+        <datalist id="articulos">
+          <option value="Pollo Fresco GTA x Kg">
+          <option value="Leche Entera 1L">
+          <option value="Arroz 1Kg">
+        </datalist>
+      </div>
 
-            <!-- Código -->
-            <div class="col-12 col-md-4">
-                <label class="form-label">Código</label>
-                <input type="text" id="codigo" 
-                       class="form-control form-control-lg" 
-                       placeholder="Código del producto"
-                       inputmode="numeric" pattern="[0-9]*"
-                       oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                       onkeydown="if(event.key==='Enter'){document.getElementById('fecha').focus();}">
-            </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Código</label>
+        <input type="text" id="codigo" class="form-control form-control-lg"
+               placeholder="Código del producto"
+               inputmode="numeric" pattern="[0-9]*"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+               onkeydown="if(event.key==='Enter'){document.getElementById('fecha').focus();}">
+      </div>
 
-            <!-- Fecha -->
-            <div class="col-12 col-md-4">
-                <label class="form-label">Fecha de vencimiento</label>
-                <input type="date" id="fecha" class="form-control form-control-lg"
-                       onkeydown="if(event.key==='Enter'){agregarProducto();}">
-            </div>
-        </div>
-
-        <!-- Botón verde -->
-        <button class="btn btn-success btn-lg mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Fecha de vencimiento</label>
+        <input type="date" id="fecha" class="form-control form-control-lg"
+               onkeydown="if(event.key==='Enter'){agregarProducto();}">
+      </div>
     </div>
 
-    <!-- Lista -->
-    <div class="card p-4 shadow-lg border-0">
-        <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
-            📋 Lista de productos
-            <button class="btn btn-sm btn-outline-warning" 
-                    type="button" 
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#listaCollapse" 
-                    aria-expanded="true" 
-                    aria-controls="listaCollapse">
-                Mostrar / Ocultar
-            </button>
-        </h4>
+    <button class="btn btn-success btn-lg mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
+    <button class="btn btn-warning btn-lg mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+  </div>
 
-        <div class="collapse show" id="listaCollapse">
-            <ul id="lista" class="list-group"></ul>
-        </div>
-
-        <!-- Botón amarillo fijo debajo -->
-        <button class="btn btn-warning btn-lg mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+  <!-- Lista -->
+  <div class="card p-4 shadow-lg border-0">
+    <h4 class="mb-3 text-warning d-flex justify-content-between align-items-center">
+      📋 Lista de productos
+      <button class="btn btn-sm btn-outline-warning" type="button"
+              data-bs-toggle="collapse" data-bs-target="#listaCollapse"
+              aria-expanded="true" aria-controls="listaCollapse">
+        Mostrar / Ocultar
+      </button>
+    </h4>
+    <div class="collapse show" id="listaCollapse">
+      <ul id="lista" class="list-group"></ul>
     </div>
+  </div>
 </div>
 
 <!-- Script -->
 <script>
-    function agregarProducto() {
-        const nombre = document.getElementById("nombre").value.trim();
-        const codigo = document.getElementById("codigo").value.trim();
-        const fecha = document.getElementById("fecha").value.trim();
+function agregarProducto() {
+  const nombre = document.getElementById("nombre").value.trim();
+  const codigo = document.getElementById("codigo").value.trim();
+  const fecha = document.getElementById("fecha").value.trim();
 
-        if (nombre && codigo && fecha) {
-            const lista = document.getElementById("lista");
-            const item = document.createElement("li");
-            item.className = "list-group-item d-flex justify-content-between align-items-center";
-            item.innerHTML = `
-                <span>${nombre} - Código: ${codigo} - Vence: ${fecha}</span>
-                <div>
-                    <button class="btn btn-sm btn-primary me-2" onclick="modificarFecha(this)">Modificar</button>
-                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">Borrar</button>
-                </div>
-            `;
-            lista.appendChild(item);
+  if ((nombre || codigo) && fecha) {
+    const lista = document.getElementById("lista");
+    const item = document.createElement("li");
+    item.className = "list-group-item d-flex justify-content-between align-items-center";
+    item.innerHTML = `
+      <span>${nombre ? nombre : "(Sin nombre)"} - Código: ${codigo ? codigo : "(Sin código)"} - Vence: ${fecha}</span>
+      <div>
+        <button class="btn btn-sm btn-primary me-2" onclick="modificarFecha(this)">Modificar</button>
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">Borrar</button>
+      </div>
+    `;
+    lista.appendChild(item);
 
-            // limpiar campos
-            document.getElementById("nombre").value = "";
-            document.getElementById("codigo").value = "";
-            document.getElementById("fecha").value = "";
+    document.getElementById("nombre").value = "";
+    document.getElementById("codigo").value = "";
+    document.getElementById("fecha").value = "";
+    document.getElementById("codigo").focus();
+  } else {
+    alert("Completa al menos nombre o código, y la fecha.");
+  }
+}
 
-            // volver el foco al campo código
-            document.getElementById("codigo").focus();
-        } else {
-            alert("Completa nombre, código y fecha antes de agregar.");
-        }
-    }
+function modificarFecha(btn) {
+  const li = btn.parentElement.parentElement;
+  const datos = li.querySelector("span").textContent.split(" - ");
+  const nuevoFecha = prompt("Nueva fecha de vencimiento (YYYY-MM-DD):", datos[2].replace("Vence: ",""));
+  if (nuevoFecha) {
+    datos[2] = "Vence: " + nuevoFecha;
+    li.querySelector("span").textContent = datos.join(" - ");
+  }
+}
 
-    function modificarFecha(btn) {
-        const li = btn.parentElement.parentElement;
-        const datos = li.querySelector("span").textContent.split(" - ");
-        const nuevoFecha = prompt("Nueva fecha de vencimiento (YYYY-MM-DD):", datos[2].replace("Vence: ",""));
-        if (nuevoFecha) {
-            datos[2] = "Vence: " + nuevoFecha;
-            li.querySelector("span").textContent = datos.join(" - ");
-        }
-    }
+function guardarLista() {
+  const lista = document.querySelectorAll("#lista li span");
+  if (lista.length === 0) {
+    alert("No hay productos en la lista.");
+    return;
+  }
 
-    function guardarLista() {
-        alert("Aquí iría la lógica para exportar la lista a Excel.");
-    }
+  // Convertir lista en array de objetos
+  const datos = [];
+  lista.forEach(item => {
+    const partes = item.textContent.split(" - ");
+    datos.push({
+      Nombre: partes[0],
+      Código: partes[1].replace("Código: ",""),
+      Fecha: partes[2].replace("Vence: ","")
+    });
+  });
+
+  // Crear hoja Excel
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Productos");
+
+  // Descargar archivo
+  XLSX.writeFile(wb, "productos.xlsx");
+}
 </script>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-
-
+</body>
+</html>
 
 
 
