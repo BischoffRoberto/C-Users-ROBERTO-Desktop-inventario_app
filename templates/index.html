@@ -2,68 +2,46 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Adaptación a móvil -->
     <title>ARCHIVO VENCIMIENTO</title>
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Tu CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="bg-warning">
+<body class="bg-light">
 
-    <!-- Encabezado -->
-    <div class="text-center py-4 bg-danger text-white shadow">
-        <img src="{{ url_for('static', filename='imagen.png') }}" 
-             alt="Logo" 
-             style="height:50px; vertical-align:middle;">
-        <h3 class="d-inline-block ms-2">ARCHIVO VENCIMIENTO</h3>
-    </div>
+<div class="container mt-4">
+    <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO</h1>
 
-    <!-- Contenedor responsive -->
-    <div class="container my-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
-
-                <!-- Tarjeta Agregar producto -->
-                <div class="card p-4 mb-4 shadow-lg border-0">
-                    <h4 class="mb-3 text-success">➕ Agregar producto</h4>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Código</label>
-                            <input type="number" id="codigo" name="codigo" 
-                                   class="form-control form-control-sm no-spinner" 
-                                   min="0" step="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Nombre del artículo</label>
-                            <input type="text" id="nombre" list="articulos" class="form-control form-control-sm" placeholder="Seleccione o escribe para filtrar">
-                            <datalist id="articulos">
-                                <!-- opciones dinámicas -->
-                            </datalist>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Fecha de vencimiento</label>
-                            <input type="date" id="fecha" class="form-control form-control-sm">
-                        </div>
-                    </div>
-                    <button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
-                </div>
-
-                <!-- Tarjeta Lista de productos -->
-                <div class="card p-4 shadow-lg border-0">
-                    <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
-                    <ul id="lista" class="list-group"></ul>
-                    <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
-                </div>
-
-                <!-- Mensaje -->
-                <div id="mensaje" class="alert d-none mt-3"></div>
-
+    <div class="card p-4 mb-4 shadow-lg border-0">
+        <h4 class="mb-3 text-success">➕ Agregar producto</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Código</label>
+                <input type="text" id="codigo" class="form-control form-control-sm" placeholder="Ej: A123">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Nombre del artículo</label>
+                <input type="text" id="nombre" list="articulos" class="form-control form-control-sm" placeholder="Seleccione o escribe para filtrar">
+                <datalist id="articulos">
+                    <!-- opciones dinámicas -->
+                </datalist>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha de vencimiento</label>
+                <input type="date" id="fecha" class="form-control form-control-sm">
             </div>
         </div>
+        <button class="btn btn-success btn-sm mt-3 w-100" onclick="agregarProducto()">Agregar producto</button>
     </div>
 
-</body>
+    <div class="card p-4 shadow-lg border-0">
+        <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
+        <ul id="lista" class="list-group"></ul>
+        <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
+    </div>
+
+    <div id="mensaje" class="alert d-none mt-3"></div>
+</div>
+
 <script>
 function mostrarMensaje(texto, tipo="info") {
     const msg = document.getElementById("mensaje");
@@ -365,6 +343,11 @@ async function saveEdit(codigo) {
 </body>
 </html>
 
+<!-- Tabla dinámica de productos y sincronización con datalist -->
+<div class="container mt-3">
+  
+    <table id="tablaProductos" class="table table-sm"></table>
+</div>
 
 <script>
 // Datos simulados para la tabla
@@ -380,6 +363,19 @@ function renderArticulosTabla() {
         datalist.appendChild(option);
     });
 }
+
+function renderTablaProductos() {
+    const tabla = document.getElementById("tablaProductos");
+    if (!tabla) return;
+    tabla.innerHTML = "";
+    productosTabla.forEach((p, i) => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td>${p}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="borrarProductoTabla(${i})">Borrar</button></td>
+        `;
+        tabla.appendChild(fila);
+    });
 }
 
 function borrarProductoTabla(index) {
@@ -392,9 +388,6 @@ function borrarProductoTabla(index) {
 renderTablaProductos();
 renderArticulosTabla();
 </script>
-
-
-
 
 
 
