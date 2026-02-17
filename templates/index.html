@@ -339,16 +339,6 @@ async function saveEdit(codigo) {
 }
 </script>
 
-<!-- Input alternativo y lista de ejemplo (usa el mismo datalist `articulos`) -->
-<div class="container mt-2">
-    <div class="mb-3">
-        <input type="text" id="articulo" list="articulos" class="form-control form-control-sm">
-    </div>
-
-    <!-- lista de ejemplo eliminada (sin valores predeterminados) -->
-</div>
-
-<!-- Sin función local de borrado ni valores predeterminados -->
 
 </body>
 </html>
@@ -404,6 +394,7 @@ document.getElementById("codigo").addEventListener("input", function() {
     this.value = this.value.replace(/[^0-9]/g, '');
 });
 </script>
+
 
 
 
