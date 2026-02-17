@@ -23,3 +23,14 @@ h1 {
 .no-spinner {
   -moz-appearance: textfield;
 }
+.navbar {
+  display: flex;
+  justify-content: center;   /* centra horizontalmente */
+  font-size: 18px;           /* más grande en móvil */
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    font-size: 22px;         /* aún más grande en pantallas pequeñas */
+  }
+}
