@@ -139,3 +139,42 @@ def modificar_producto(codigo: str, nueva_fecha: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import Form
+
+@app.get("/admin", response_class=HTMLResponse)
+def admin_panel(request: Request, usuario_id: int = Depends(obtener_usuario)):
+    if usuario_id != 1:  # Solo el master (id=1)
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    conn = sqlite3.connect("Inventario.db")
+    c = conn.cursor()
+    c.execute("""
+        SELECT t.token, u.usuario, t.ip, t.navegador, t.expira, t.activo
+        FROM tokens t
+        JOIN usuarios u ON t.usuario_id = u.id
+    """)
+    sesiones = c.fetchall()
+
+    c.execute("SELECT * FROM alertas ORDER BY fecha DESC")
+    alertas = c.fetchall()
+
+    conn.close()
+
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "sesiones": sesiones,
+        "alertas": alertas
+    })
+    @app.post("/admin/cerrar_sesion")
+def cerrar_sesion(token: str = Form(...), usuario_id: int = Depends(obtener_usuario)):
+    if usuario_id != 1:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    conn = sqlite3.connect("Inventario.db")
+    c = conn.cursor()
+    c.execute("UPDATE tokens SET activo = 0 WHERE token = ?", (token,))
+    conn.commit()
+    conn.close()
+    return RedirectResponse(url="/admin", status_code=303)
