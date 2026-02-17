@@ -59,10 +59,36 @@
     </div>
 
     <div class="card p-4 shadow-lg border-0">
-        <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
-        <ul id="lista" class="list-group"></ul>
-        <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
-    </div>
+    <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
+
+    <!-- Botón para mostrar/ocultar -->
+    <button id="toggleLista" class="btn btn-outline-warning btn-sm mb-2 w-100">
+        Minimizar lista
+    </button>
+
+    <!-- Lista de productos -->
+    <ul id="lista" class="list-group"></ul>
+
+    <!-- Botón de guardar -->
+    <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">
+        Guardar y descargar Excel
+    </button>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById("toggleLista");
+    const lista = document.getElementById("lista");
+
+    toggleBtn.addEventListener("click", () => {
+        if (lista.style.display === "none") {
+            lista.style.display = "block";
+            toggleBtn.textContent = "Minimizar lista";
+        } else {
+            lista.style.display = "none";
+            toggleBtn.textContent = "Mostrar lista";
+        }
+    });
+</script>
 
     <div id="mensaje" class="alert d-none mt-3"></div>
 </div>
@@ -419,6 +445,7 @@ document.getElementById("codigo").addEventListener("input", function() {
     this.value = this.value.replace(/[^0-9]/g, '');
 });
 </script>
+
 
 
 
