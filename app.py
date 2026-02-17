@@ -1,11 +1,13 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request, HTTPException, Depends, Form, Header
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import pandas as pd
-from datetime import datetime
+import sqlite3
+from datetime import datetime, timedelta
 import uuid
+from passlib.context import CryptContext
 
 # 1️⃣ Crear la aplicación FastAPI
 app = FastAPI()
@@ -18,16 +20,23 @@ templates = Jinja2Templates(directory="templates")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# 3️⃣ Cargar Excel base
+# 3️⃣ Configuración de contraseñas
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(password: str, hashed: str) -> bool:
+    return pwd_context.verify(password, hashed)
+
+# 4️⃣ Cargar Excel base
 try:
     df = pd.read_excel("Inventario.xlsx")
     df.columns = df.columns.str.strip().str.lower()
 except FileNotFoundError:
     df = pd.DataFrame(columns=["codigo", "descripcion", "stock"])
 
-# 4️⃣ Lista temporal
-lista_productos = []
-
+# 5️⃣ Modelo de producto
 class Producto(BaseModel):
     codigo: str | None = None
     descripcion: str | None = None
@@ -45,107 +54,102 @@ def estado_vencimiento(fecha_vencimiento: str) -> str:
         return f"Crítico (<7 días)"
     return f"Correcto ({dias} días restantes)"
 
-# 5️⃣ Endpoints
-@app.post("/agregar_producto")
-def agregar_producto(prod: Producto):
-    if prod.codigo:
-        producto = df[df["codigo"].astype(str).str.strip().str.upper() == prod.codigo.strip().upper()]
-        if producto.empty:
-            raise HTTPException(status_code=404, detail="Producto no encontrado por código")
-    elif prod.descripcion:
-        producto = df[df["descripcion"].str.contains(prod.descripcion.strip(), case=False)]
-        if producto.empty:
-            raise HTTPException(status_code=404, detail="Producto no encontrado por descripción")
+# 6️⃣ Tokens en memoria
+tokens = {}
+
+def crear_token(usuario_id: int) -> str:
+    token = str(uuid.uuid4())
+    tokens[token] = {
+        "usuario_id": usuario_id,
+        "expira": datetime.utcnow() + timedelta(minutes=30)
+    }
+    return token
+
+def obtener_usuario(authorization: str = Header(...)):
+    try:
+        scheme, token = authorization.split()
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Formato inválido")
+
+    if scheme.lower() != "bearer" or token not in tokens:
+        raise HTTPException(status_code=401, detail="No autorizado")
+
+    datos = tokens[token]
+    if datetime.utcnow() > datos["expira"]:
+        del tokens[token]
+        raise HTTPException(status_code=401, detail="Token expirado")
+
+    return datos["usuario_id"]
+
+# 7️⃣ Endpoints de usuarios
+@app.post("/registro")
+def registro(usuario: str = Form(...), contraseña: str = Form(...)):
+    conn = sqlite3.connect("Inventario.db")
+    c = conn.cursor()
+    hashed = hash_password(contraseña)
+    try:
+        c.execute("INSERT INTO usuarios (usuario, contraseña) VALUES (?, ?)", (usuario, hashed))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=400, detail="Usuario ya existe")
+    finally:
+        conn.close()
+    return {"mensaje": "Usuario registrado"}
+
+@app.post("/login")
+def login(usuario: str = Form(...), contraseña: str = Form(...)):
+    conn = sqlite3.connect("Inventario.db")
+    c = conn.cursor()
+    c.execute("SELECT id, contraseña FROM usuarios WHERE usuario = ?", (usuario,))
+    user = c.fetchone()
+    conn.close()
+
+    if user and verify_password(contraseña, user[1]):
+        token = crear_token(user[0])
+        return {"token": token}
     else:
-        raise HTTPException(status_code=400, detail="Debe ingresar código o descripción")
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+# 8️⃣ Endpoints de inventario
+@app.post("/agregar_producto")
+def agregar_producto(prod: Producto, usuario_id: int = Depends(obtener_usuario)):
+    producto = df[df["codigo"].astype(str).str.strip().str.upper() == prod.codigo.strip().upper()]
+    if producto.empty:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
 
     datos = producto.to_dict(orient="records")[0]
 
-    # Evitar duplicados por código
-    for p in lista_productos:
-        if p["Codigo"] == datos.get("codigo", ""):
-            raise HTTPException(status_code=400, detail="Producto ya agregado")
+    conn = sqlite3.connect("Inventario.db")
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO items (usuario_id, codigo, descripcion, stock, fecha_vencimiento, estado)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        usuario_id,
+        datos.get("codigo", ""),
+        datos.get("descripcion", ""),
+        datos.get("stock", ""),
+        prod.fecha_vencimiento,
+        estado_vencimiento(prod.fecha_vencimiento)
+    ))
+    conn.commit()
+    conn.close()
 
-    lista_productos.append({
-        "Codigo": datos.get("codigo", ""),
-        "Descripcion": datos.get("descripcion", ""),
-        "Stock": datos.get("stock", ""),
-        "FechaVencimiento": prod.fecha_vencimiento,
-        "Estado": estado_vencimiento(prod.fecha_vencimiento)
-    })
+    return {"mensaje": "Producto agregado"}
 
-    return {"mensaje": "Producto agregado", "lista": lista_productos}
+@app.get("/mis_productos")
+def mis_productos(usuario_id: int = Depends(obtener_usuario)):
+    conn = sqlite3.connect("Inventario.db")
+    c = conn.cursor()
+    c.execute("SELECT codigo, descripcion, stock, fecha_vencimiento, estado FROM items WHERE usuario_id = ?", (usuario_id,))
+    productos = c.fetchall()
+    conn.close()
+    return {"productos": productos}
 
-@app.post("/guardar_lista")
-def guardar_lista():
-    if not lista_productos:
-        raise HTTPException(status_code=400, detail="Lista vacía")
-
-    df_final = pd.DataFrame(lista_productos)
-    nombre_archivo = f"lista_{uuid.uuid4().hex}.xlsx"
-    df_final.to_excel(nombre_archivo, index=False)
-
-    return FileResponse(nombre_archivo, filename="lista_final.xlsx")
-
-@app.delete("/borrar_producto/{codigo}")
-def borrar_producto(codigo: str):
-    global lista_productos
-    # Normalizar comparación para evitar problemas por mayúsculas/espacios/tipos
-    def codigo_ok(p):
-        try:
-            return str(p.get("Codigo", "")).strip().upper()
-        except Exception:
-            return ""
-
-    codigo_norm = str(codigo).strip().upper()
-    lista_productos = [p for p in lista_productos if codigo_ok(p) != codigo_norm]
-    return {"mensaje": "Producto eliminado", "lista": lista_productos}
-
-@app.get("/nombres")
-def obtener_nombres():
-    return {"nombres": df["descripcion"].dropna().unique().tolist()}
-
-
-@app.get("/api/articulos")
-def get_articulos():
-    try:
-        # Devolver los nombres desde el DataFrame si está disponible
-        return df["descripcion"].dropna().unique().tolist()
-    except Exception:
-        # Fallback de ejemplo
-        return ["Producto A", "Producto B", "Producto C"]
-
-@app.get("/lista")
-def get_lista():
-    return {"lista": lista_productos}
-
-
-@app.put("/modificar_producto/{codigo}")
-def modificar_producto(codigo: str, nueva_fecha: str):
-    # Normalizar comparación (ignorar mayúsculas/espacios)
-    codigo_norm = str(codigo).strip().upper()
-    for p in lista_productos:
-        try:
-            p_codigo = str(p.get("Codigo", "")).strip().upper()
-        except Exception:
-            p_codigo = ""
-        if p_codigo == codigo_norm:
-            p["FechaVencimiento"] = nueva_fecha
-            p["Estado"] = estado_vencimiento(nueva_fecha)
-            return {"mensaje": "Producto modificado", "lista": lista_productos}
-    raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-# 6️⃣ Arranque del servidor
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
-
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi import Form
-
+# 9️⃣ Panel de administrador
 @app.get("/admin", response_class=HTMLResponse)
 def admin_panel(request: Request, usuario_id: int = Depends(obtener_usuario)):
-    if usuario_id != 1:  # Solo el master (id=1)
+    if usuario_id != 1:  # Solo el master
         raise HTTPException(status_code=403, detail="Acceso denegado")
 
     conn = sqlite3.connect("Inventario.db")
@@ -159,7 +163,6 @@ def admin_panel(request: Request, usuario_id: int = Depends(obtener_usuario)):
 
     c.execute("SELECT * FROM alertas ORDER BY fecha DESC")
     alertas = c.fetchall()
-
     conn.close()
 
     return templates.TemplateResponse("admin.html", {
@@ -167,7 +170,8 @@ def admin_panel(request: Request, usuario_id: int = Depends(obtener_usuario)):
         "sesiones": sesiones,
         "alertas": alertas
     })
-    @app.post("/admin/cerrar_sesion")
+
+@app.post("/admin/cerrar_sesion")
 def cerrar_sesion(token: str = Form(...), usuario_id: int = Depends(obtener_usuario)):
     if usuario_id != 1:
         raise HTTPException(status_code=403, detail="Acceso denegado")
@@ -178,3 +182,9 @@ def cerrar_sesion(token: str = Form(...), usuario_id: int = Depends(obtener_usua
     conn.commit()
     conn.close()
     return RedirectResponse(url="/admin", status_code=303)
+
+# 🔟 Arranque del servidor
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+
