@@ -23,3 +23,10 @@ h1 {
 .no-spinner {
   -moz-appearance: textfield;
 }
+@media (max-width: 600px) {
+  .menu {
+    flex-direction: column;
+    font-size: 14px;
+  }
+}
+
