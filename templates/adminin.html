@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel de Administración</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Panel de Control - Usuario Master</h1>
+
+    <h2>Usuarios Conectados</h2>
+    <table border="1">
+        <tr>
+            <th>Usuario</th>
+            <th>IP</th>
+            <th>Navegador</th>
+            <th>Token</th>
+            <th>Expira</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+        {% for sesion in sesiones %}
+        <tr>
+            <td>{{ sesion[1] }}</td>
+            <td>{{ sesion[2] }}</td>
+            <td>{{ sesion[3] }}</td>
+            <td>{{ sesion[0] }}</td>
+            <td>{{ sesion[4] }}</td>
+            <td>{{ "Sí" if sesion[5] == 1 else "No" }}</td>
+            <td>
+                <form method="post" action="/admin/cerrar_sesion">
+                    <input type="hidden" name="token" value="{{ sesion[0] }}">
+                    <button type="submit">Cerrar Sesión</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Alertas</h2>
+    <ul>
+        {% for alerta in alertas %}
+        <li>{{ alerta[2] }} - Usuario ID: {{ alerta[1] }} ({{ alerta[3] }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
