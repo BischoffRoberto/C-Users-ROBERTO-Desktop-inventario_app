@@ -1,22 +1,10 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #fff8dc; /* amarillo suave */
+body, .bg-light {
+    background-color: #fffbea; /* amarillo suave */
 }
-
-.container {
-  max-width: 480px; /* ancho típico de móvil */
-  margin: auto;
-  padding: 1rem;
+.btn-primary {
+    background-color: #ff0000; /* rojo manzana */
+    border: none;
 }
-
-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #ff0000; /* rojo manzana */
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
+.btn-primary:hover {
+    background-color: #cc0000;
 }
-* { background: red !important; }
