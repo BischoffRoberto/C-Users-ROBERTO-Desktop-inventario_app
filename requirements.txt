@@ -3,3 +3,5 @@ uvicorn==0.32.0
 pandas
 jinja2
 openpyxl
+passlib[bcrypt]
+python-multipart
