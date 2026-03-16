@@ -15,8 +15,46 @@
     <h1 class="text-center mb-4 text-primary text-uppercase fw-bold">ARCHIVO VENCIMIENTO 
     SUC 391 TRIUNVIRATO</h1>
 
+    <!-- ============================================================
+         PASO 1 — SUBIR CARPETA / CATÁLOGO (siempre visible arriba)
+    ============================================================ -->
+    <div class="card border-primary mb-4 shadow" style="border-width:3px!important">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0 fw-bold">📁 PASO 1 — Subir carpeta o catálogo</h4>
+        </div>
+        <div class="card-body p-4">
+            <p class="mb-3">
+                <strong>Aquí subís tu carpeta completa.</strong>
+                Seleccioná tu carpeta (todos los archivos Excel que contiene se cargarán),
+                o elegí un archivo <strong>ZIP</strong> / <strong>.xlsx</strong> directamente.
+            </p>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">📂 Seleccionar carpeta entera</label>
+                    <input type="file" id="inputCarpeta" class="form-control"
+                           webkitdirectory multiple accept=".xlsx,.xls">
+                    <div class="form-text">Soportado en Chrome, Edge y Firefox.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">📄 O subir archivo ZIP / Excel</label>
+                    <input type="file" id="inputZip" class="form-control"
+                           accept=".zip,.xlsx,.xls">
+                    <div class="form-text">Comprimí la carpeta en un .zip si preferís.</div>
+                </div>
+            </div>
+            <button class="btn btn-primary mt-4 w-100 py-2 fs-5 fw-bold"
+                    onclick="subirCarpeta()">
+                ⬆️ Subir catálogo ahora
+            </button>
+            <div id="mensajeCarpeta" class="alert d-none mt-3"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         PASO 2 — AGREGAR PRODUCTO
+    ============================================================ -->
     <div class="card p-4 mb-4 shadow-lg border-0">
-        <h4 class="mb-3 text-success">➕ Agregar producto</h4>
+        <h4 class="mb-3 text-success">➕ PASO 2 — Agregar producto</h4>
         <div class="row g-3">
             <div class="col-md-4">
                 <label class="form-label">Código</label>
@@ -38,7 +76,7 @@
     </div>
 
     <div class="card p-4 shadow-lg border-0">
-        <h4 class="mb-3 text-warning">📋 Lista de productos</h4>
+        <h4 class="mb-3 text-warning">📋 PASO 3 — Lista de productos</h4>
         <ul id="lista" class="list-group"></ul>
         <button class="btn btn-warning btn-sm mt-3 w-100" onclick="guardarLista()">Guardar y descargar Excel</button>
     </div>
@@ -47,6 +85,49 @@
 </div>
 
 <script>
+function mostrarMensajeCarpeta(texto, tipo="info") {
+    const msg = document.getElementById("mensajeCarpeta");
+    msg.className = `alert alert-${tipo}`;
+    msg.textContent = texto;
+    msg.classList.remove("d-none");
+}
+
+async function subirCarpeta() {
+    const inputCarpeta = document.getElementById("inputCarpeta");
+    const inputZip = document.getElementById("inputZip");
+
+    // Determinar qué fuente tiene archivos
+    let archivos = [];
+    if (inputCarpeta.files && inputCarpeta.files.length > 0) {
+        archivos = Array.from(inputCarpeta.files);
+    } else if (inputZip.files && inputZip.files.length > 0) {
+        archivos = Array.from(inputZip.files);
+    }
+
+    if (archivos.length === 0) {
+        mostrarMensajeCarpeta("Seleccioná una carpeta o archivo antes de subir.", "warning");
+        return;
+    }
+
+    const formData = new FormData();
+    archivos.forEach(f => formData.append("archivos", f));
+
+    mostrarMensajeCarpeta("Subiendo… por favor esperá.", "info");
+    try {
+        const resp = await fetch("/upload_carpeta", { method: "POST", body: formData });
+        const data = await resp.json();
+        if (resp.ok) {
+            mostrarMensajeCarpeta(`✅ ${data.mensaje}`, "success");
+            // Refrescar el datalist con los nuevos artículos
+            cargarArticulos();
+        } else {
+            mostrarMensajeCarpeta(`❌ ${data.detail || "Error al subir"}`, "danger");
+        }
+    } catch (e) {
+        mostrarMensajeCarpeta("Error de conexión al subir la carpeta.", "danger");
+    }
+}
+
 function mostrarMensaje(texto, tipo="info") {
     const msg = document.getElementById("mensaje");
     msg.className = `alert alert-${tipo}`;

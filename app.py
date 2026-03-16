@@ -1,11 +1,12 @@
-from fastapi import FastAPI, Request, HTTPException, Query
+from fastapi import FastAPI, File, Request, HTTPException, Query, UploadFile
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 import pandas as pd
 import io
+import zipfile
 from datetime import datetime
 
 # 1️⃣ Crear la aplicación FastAPI
@@ -59,7 +60,62 @@ def lista_to_response(lista: list) -> list:
         for p in lista
     ]
 
-# 6️⃣ Catálogo de artículos
+def _cargar_excel_bytes(contenido: bytes) -> Optional[pd.DataFrame]:
+    """Lee un archivo Excel desde bytes y normaliza las columnas."""
+    try:
+        df = pd.read_excel(io.BytesIO(contenido))
+        df.columns = df.columns.str.strip().str.lower()
+        return df
+    except Exception:
+        return None
+
+# 6️⃣ Subir carpeta completa (archivos individuales o ZIP)
+@app.post("/upload_carpeta")
+async def upload_carpeta(archivos: List[UploadFile] = File(...)):
+    """
+    Acepta uno o varios archivos:
+    - Si se sube un .zip, se extraen todos los .xlsx/.xls que contenga.
+    - Si se suben directamente archivos Excel, se procesan uno a uno.
+    Los datos reemplazan el catálogo en memoria.
+    """
+    global df_catalogo
+
+    dfs = []
+
+    for archivo in archivos:
+        nombre = (archivo.filename or "").lower()
+        contenido = await archivo.read()
+
+        if nombre.endswith(".zip"):
+            try:
+                with zipfile.ZipFile(io.BytesIO(contenido)) as zf:
+                    for entry in zf.namelist():
+                        entry_lower = entry.lower()
+                        if entry_lower.endswith(".xlsx") or entry_lower.endswith(".xls"):
+                            df_nuevo = _cargar_excel_bytes(zf.read(entry))
+                            if df_nuevo is not None:
+                                dfs.append(df_nuevo)
+            except zipfile.BadZipFile:
+                raise HTTPException(status_code=400, detail=f"El archivo '{archivo.filename}' no es un ZIP válido")
+
+        elif nombre.endswith(".xlsx") or nombre.endswith(".xls"):
+            df_nuevo = _cargar_excel_bytes(contenido)
+            if df_nuevo is not None:
+                dfs.append(df_nuevo)
+
+    if not dfs:
+        raise HTTPException(
+            status_code=400,
+            detail="No se encontraron archivos Excel (.xlsx/.xls) en los archivos subidos",
+        )
+
+    df_catalogo = pd.concat(dfs, ignore_index=True).drop_duplicates()
+    return {
+        "mensaje": f"Catálogo actualizado con {len(df_catalogo)} productos",
+        "total_productos": len(df_catalogo),
+    }
+
+
 @app.get("/api/articulos")
 def get_articulos():
     if "descripcion" in df_catalogo.columns:
