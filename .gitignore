@@ -23,3 +23,4 @@ wheels/
 .idea/
 venv/
 products.json
+*.db
